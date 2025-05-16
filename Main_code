@@ -1,0 +1,225 @@
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <iomanip>
+using namespace std;
+
+// Define the structure for student data
+struct Student {
+    int rollNumber;
+    string name;
+    string course;
+    float marks;
+};
+
+// Global student list
+vector<Student> studentList;
+
+// File name for saving/loading
+const string FILENAME = "students.txt";
+
+// Function Prototypes
+void loadFromFile();
+void saveToFile();
+void addStudent();
+void displayStudents();
+void searchStudent();
+void updateStudent();
+void deleteStudent();
+bool adminLogin();
+void menu();
+
+// Load student data from file
+void loadFromFile() {
+    ifstream file(FILENAME);
+    studentList.clear();
+
+    if (file.is_open()) {
+        Student s;
+        while (file >> s.rollNumber) {
+            file.ignore();
+            getline(file, s.name);
+            getline(file, s.course);
+            file >> s.marks;
+            file.ignore();
+            studentList.push_back(s);
+        }
+        file.close();
+    }
+}
+
+// Save student data to file
+void saveToFile() {
+    ofstream file(FILENAME);
+    for (auto& s : studentList) {
+        file << s.rollNumber << endl;
+        file << s.name << endl;
+        file << s.course << endl;
+        file << s.marks << endl;
+    }
+    file.close();
+}
+
+// Add a new student
+void addStudent() {
+    Student s;
+    cout << "\nEnter Roll Number: ";
+    cin >> s.rollNumber;
+    cout << "Enter Name: ";
+    cin.ignore();
+    getline(cin, s.name);
+    cout << "Enter Course: ";
+    getline(cin, s.course);
+    cout << "Enter Marks: ";
+    cin >> s.marks;
+
+    studentList.push_back(s);
+    saveToFile();
+    cout << "\n Student added successfully!\n";
+}
+
+// Display all students
+void displayStudents() {
+    if (studentList.empty()) {
+        cout << "\n No student records found.\n";
+        return;
+    }
+
+    cout << "\n --- All Student Records ---\n";
+    cout << left << setw(12) << "Roll No" << setw(20) << "Name" << setw(15) << "Course" << setw(10) << "Marks\n";
+    cout << "-------------------------------------------------------------\n";
+
+    for (const auto& s : studentList) {
+        cout << left << setw(12) << s.rollNumber << setw(20) << s.name << setw(15) << s.course << setw(10) << s.marks << endl;
+    }
+}
+
+// Search student by roll number
+void searchStudent() {
+    int roll;
+    cout << "\n Enter Roll Number to search: ";
+    cin >> roll;
+
+    bool found = false;
+    for (const auto& s : studentList) {
+        if (s.rollNumber == roll) {
+            cout << "\n Student Found:\n";
+            cout << "Name: " << s.name << endl;
+            cout << "Course: " << s.course << endl;
+            cout << "Marks: " << s.marks << endl;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        cout << "\n Student with Roll Number " << roll << " not found.\n";
+    }
+}
+
+// Update existing student record
+void updateStudent() {
+    int roll;
+    cout << "\n Enter Roll Number to update: ";
+    cin >> roll;
+
+    for (auto& s : studentList) {
+        if (s.rollNumber == roll) {
+            cout << "\nUpdating record for " << s.name << "...\n";
+            cout << "Enter new name: ";
+            cin.ignore();
+            getline(cin, s.name);
+            cout << "Enter new course: ";
+            getline(cin, s.course);
+            cout << "Enter new marks: ";
+            cin >> s.marks;
+            saveToFile();
+            cout << "\n Record updated successfully.\n";
+            return;
+        }
+    }
+    cout << "\n Student with Roll Number " << roll << " not found.\n";
+}
+
+// Delete a student record
+void deleteStudent() {
+    int roll;
+    cout << "\n Enter Roll Number to delete: ";
+    cin >> roll;
+
+    for (auto it = studentList.begin(); it != studentList.end(); ++it) {
+        if (it->rollNumber == roll) {
+            cout << "\n Are you sure you want to delete " << it->name << "? (y/n): ";
+            char confirm;
+            cin >> confirm;
+            if (confirm == 'y' || confirm == 'Y') {
+                studentList.erase(it);
+                saveToFile();
+                cout << "\n Record deleted successfully.\n";
+            } else {
+                cout << "\n Deletion canceled.\n";
+            }
+            return;
+        }
+    }
+
+    cout << "\n Student with Roll Number " << roll << " not found.\n";
+}
+
+// Admin login with hardcoded credentials
+bool adminLogin() {
+    string username, password;
+    cout << "\n ===== Admin Login =====\n";
+    cout << "Username: ";
+    cin >> username;
+    cout << "Password: ";
+    cin >> password;
+
+    if (username == "admin" && password == "12345") {
+        cout << "\n Login successful!\n";
+        return true;
+    } else {
+        cout << "\n Invalid credentials!\n";
+        return false;
+    }
+}
+
+// Main menu loop
+void menu() {
+    int choice;
+    loadFromFile();  // Load data on start
+
+    if (!adminLogin())
+        return;
+
+    do {
+        cout << "\n==============================";
+        cout << "\n School Management System Menu";
+        cout << "\n==============================";
+        cout << "\n1. Add Student";
+        cout << "\n2. Display All Students";
+        cout << "\n3. Search Student by Roll Number";
+        cout << "\n4. Update Student";
+        cout << "\n5. Delete Student";
+        cout << "\n6. Exit";
+        cout << "\nEnter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1: addStudent(); break;
+            case 2: displayStudents(); break;
+            case 3: searchStudent(); break;
+            case 4: updateStudent(); break;
+            case 5: deleteStudent(); break;
+            case 6: cout << "\n👋 Thank you for using the system!\n"; break;
+            default: cout << "\n❌ Invalid choice. Try again.\n";
+        }
+
+    } while (choice != 6);
+}
+
+// Main program entry
+int main() {
+    menu();
+    return 0;
+}
